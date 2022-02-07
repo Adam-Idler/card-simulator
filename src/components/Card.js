@@ -4,15 +4,18 @@ export const Card = styled.div`
     position: relative;
     width: 200px;
     min-width: 180px;
-    height: 220px;
+    height: 280px;
     background: white;
     opacity: 1;
-    margin-right: 7px;
     border: .5px solid #000;
-    border-radius: 7px 7px 0 0;
+    border-radius: 7px;
     display: flex;
 
+    &.user-card {
+        margin-bottom: -80px;
+    }
+
     &:last-child {
-        margin-right: 0;
+        margin-right: 0 !important;
     }
 `;

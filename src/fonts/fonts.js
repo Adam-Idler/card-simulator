@@ -12,6 +12,7 @@ const FontStyles = createGlobalStyle`
     }
 
     body {
+        overflow: hidden;
         font-family: 'Roboto Mono', sans-serif;
     }
 `;
