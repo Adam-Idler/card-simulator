@@ -1,146 +1,182 @@
 export const classicDeckData = [
     {
         suit: 'heart',
-        value: '6',
+        value: 6,
+        name: '6'
     },
     {
         suit: 'tambourine',
-        value: '6',
+        value: 6,
+        name: '6'
     },
     {
         suit: 'cross',
-        value: '6',
+        value: 6,
+        name: '6'
     },
     {
         suit: 'spades',
-        value: '6',
+        value: 6,
+        name: '6'
     },
     {
         suit: 'heart',
-        value: '7',
+        value: 7,
+        name: '7'
     },
     {
         suit: 'tambourine',
-        value: '7',
+        value: 7,
+        name: '7'
     },
     {
         suit: 'cross',
-        value: '7',
+        value: 7,
+        name: '7'
     },
     {
         suit: 'spades',
-        value: '7',
+        value: 7,
+        name: '7'
     },
     {
         suit: 'heart',
-        value: '8',
+        value: 8,
+        name: '8'
     },
     {
         suit: 'tambourine',
-        value: '8',
+        value: 8,
+        name: '8'
     },
     {
         suit: 'cross',
-        value: '8',
+        value: 8,
+        name: '8'
     },
     {
         suit: 'spades',
-        value: '8',
+        value: 8,
+        name: '8'
     },
     {
         suit: 'heart',
-        value: '9',
+        value: 9,
+        name: '9'
     },
     {
         suit: 'tambourine',
-        value: '9',
+        value: 9,
+        name: '9'
     },
     {
         suit: 'cross',
-        value: '9',
+        value: 9,
+        name: '9'
     },
     {
         suit: 'spades',
-        value: '9',
+        value: 9,
+        name: '9'
     },
     {
         suit: 'heart',
-        value: '10',
+        value: 10,
+        name: '10'
     },
     {
         suit: 'tambourine',
-        value: '10',
+        value: 10,
+        name: '10'
     },
     {
         suit: 'cross',
-        value: '10',
+        value: 10,
+        name: '10'
     },
     {
         suit: 'spades',
-        value: '10',
+        value: 10,
+        name: '10'
     },
     {
         suit: 'heart',
-        value: 'J',
+        value: 2,
+        name: 'J'
     },
     {
         suit: 'tambourine',
-        value: 'J',
+        value: 2,
+        name: 'J'
     },
     {
         suit: 'cross',
-        value: 'J',
+        value: 2,
+        name: 'J'
     },
     {
         suit: 'spades',
-        value: 'J',
+        value: 2,
+        name: 'J'
     },
     {
         suit: 'heart',
-        value: 'Q',
+        value: 3,
+        name: 'Q'
     },
     {
         suit: 'tambourine',
-        value: 'Q',
+        value: 3,
+        name: 'Q'
     },
     {
         suit: 'cross',
-        value: 'Q',
+        value: 3,
+        name: 'Q'
     },
     {
         suit: 'spades',
-        value: 'Q',
+        value: 3,
+        name: 'Q'
     },
     {
         suit: 'heart',
-        value: 'K',
+        value: 4,
+        name: 'K'
     },
     {
         suit: 'tambourine',
-        value: 'K',
+        value: 4,
+        name: 'K'
     },
     {
         suit: 'cross',
-        value: 'K',
+        value: 4,
+        name: 'K'
     },
     {
         suit: 'spades',
-        value: 'K',
+        value: 4,
+        name: 'K'
     },
     {
         suit: 'heart',
-        value: 'A',
+        value: 11,
+        name: 'A'
     },
     {
         suit: 'tambourine',
-        value: 'A',
+        value: 11,
+        name: 'A'
     },
     {
         suit: 'cross',
-        value: 'A',
+        value: 11,
+        name: 'A'
     },
     {
         suit: 'spades',
-        value: 'A',
+        value: 11,
+        name: 'A'
     }
 ]

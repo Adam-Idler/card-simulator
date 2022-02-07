@@ -30,21 +30,19 @@ const Suit = styled.div`
 
 const SuitMini = styled(Suit)`
     margin: 0;
-    transform: scale(0.3);
-    position: absolute;
     ${props => {
         switch (props.image) {
             case heart:
-                return 'top: 20px; left: -22px';
+                return 'max-width: 21.5px; max-height: 19.4px';
                 break;
             case tambourine:
-                return 'top: 10px; left: -20px';
+                return 'max-width: 21px; max-height: 26px';
                 break;
             case cross:
-                return 'top: 20px; left: -20px';
+                return 'max-width: 21px; max-height: 21px';
                 break;
             case spades:
-                return 'top: 14px; left: -22px';
+                return 'max-width: 21.5px; max-height: 24px';
                 break;
         }
     }}
@@ -54,12 +52,16 @@ const CardValue = styled.span`
     font-size: 32px;
     font-weight: bold;
     position: absolute;
+    max-width: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     top: 5px;
     left: 10px;
     color: ${props => props.color};
 `;
 
-export function ClassicCard({ cardData }) {
+export function ClassicCard({ cardData, style }) {
     const color = cardData.suit === 'heart' || cardData.suit === 'tambourine' ? '#e10000' : 'black';
     
     switch (cardData.suit) {
@@ -78,9 +80,11 @@ export function ClassicCard({ cardData }) {
     }
 
     return (
-        <Card>
-            <CardValue color={color}>{cardData.value}</CardValue>
-            <SuitMini image={cardData.image} />
+        <Card style={style}>
+            <CardValue color={color}>
+                {cardData.name}
+                <SuitMini image={cardData.image} />
+            </CardValue>
             <Suit image={cardData.image} />
         </Card>
     );
