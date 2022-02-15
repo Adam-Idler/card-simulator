@@ -3,8 +3,6 @@ import cardShirt from '../cardsTypes/classicCard/cardShirt.png';
 
 const DeckWrapper = styled.div`
     position: relative;
-    top: 25%;
-    left: 15px;
     width: 207px;
     height: 300px;
 `;

@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
-import { PlayerGround } from "../../components/PlayerGround";
+import { Container } from "../../components/Container";
 import { GameWrapper } from "../../components/GameWrapper";
 import { Deck } from "../../components/Deck";
 
@@ -16,9 +16,6 @@ const BlackJackButton = styled.button`
     border: 2px solid #eee;
     border-radius: 8px;
     padding: 5px 20px;
-    position: absolute;
-    top: ${props => props.top || "35%"};
-    right: 20px;
     transition: opacity .2s, transform .1s;
     ${props => 
         props.disabled
@@ -36,8 +33,6 @@ const BlackJackButton = styled.button`
 `;
 
 const BlackJackScore = styled.p`
-    position: absolute;
-    right: 20px;
     color: #eee;
     font-size: 22px;
 `;
@@ -61,10 +56,10 @@ const BlackJackMessage = styled.h3`
     }
 `;
 
-const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const shuffle = (arr) => arr.sort(() => (Math.random() > .5) ? 1 : -1);
 
 export function BlackJack() {
-    const [deck, setDeck] = useState(classicDeckData);
+    const deck = classicDeckData;
     const [userCards, setUserCards] = useState([]);
     const [enemyCards, setEnemyCards] = useState([]);
     const [isEndTurn, setIsEndTurn] = useState(false);
@@ -74,22 +69,23 @@ export function BlackJack() {
 
     const [message, setMessage] = useState(null);
 
-    const getCard = (cards, setCards, deck, setDeck, count) => {
+    
+    const getCard = (setCards, deck, count) => {
         let currentCards = [];
         for (let i = 0; i < count; i++) {
-            const randomNumber = getRandomNumber(0, deck.length - 1);
-            const currentCard = deck[randomNumber];
+            const currentCard = deck[deck.length - 1];
             
             currentCards.push(currentCard);
 
             setCards(prevState => [...prevState, currentCard]);
-            setDeck(prevState => prevState.filter((card, index) => index !== randomNumber));
+            deck.pop();
         }
-
+        
         return currentCards;
     };
-
-    useEffect(() => getCard(userCards, setUserCards, deck, setDeck, 1), []);
+    
+    useEffect(() => {shuffle(deck)}, []);
+    useEffect(() => getCard(setUserCards, deck, 1), []);
     useEffect(() => setEnemyScore(enemyCards.reduce((acc, {value}) => acc + value, 0)), [enemyCards]);
     useEffect(() => setUserScore(userCards.reduce((acc, {value}) => acc + value, 0)), [userCards]);
     useEffect(() => {
@@ -100,8 +96,7 @@ export function BlackJack() {
         let enemyCardValues = 0;
 
         while (enemyCardValues < 17) {
-            let currentCard = getCard(enemyCards, setEnemyCards, deck, setDeck, 1);
-
+            let currentCard = getCard(setEnemyCards, deck, 1);
             enemyCardValues += currentCard.reduce((accumulator, {value}) => accumulator + value, 0);
         }
 
@@ -119,21 +114,52 @@ export function BlackJack() {
 
     return (
         <GameWrapper>
-            <Deck deck={deck} />
+            <Container className="horizontal left">
+                <Deck deck={deck} />
+            </Container>
 
-            <PlayerGround className="first">
-                { userCards.map( (card, index) => <ClassicCard key={index} cardData={card} className="user-card" style={{marginRight: `calc(9px - ${userCards.length * 8}px)`}} /> ) }
-            </PlayerGround>
-            <PlayerGround className="second">
-                { enemyCards.map( (card, index) => <ClassicCard key={index} cardData={card} style={{marginRight: `calc(9px - ${enemyCards.length * 8}px)`}} /> ) }
-            </PlayerGround>
+            <Container className="vertical top">
+                {enemyCards.map((card, index) => 
+                    <ClassicCard
+                        key={index} 
+                        cardData={card} 
+                        style={{marginRight: `calc(9px - ${enemyCards.length * 8}px)`}} 
+                    />
+                )}
+            </Container>
+
+            <Container className="horizontal right">
+                <BlackJackScore>{`Счет противника: ${enemyScore}`}</BlackJackScore>
+                <BlackJackButton 
+                    onClick={() => getCard(setUserCards, deck, 1)} 
+                    disabled={!deck.length || isEndTurn || userScore > 21}
+                    style={{marginBottom: "10px"}}
+                >
+                    Взять карту
+                </BlackJackButton>
+
+                <BlackJackButton 
+                    onClick={() => setIsEndTurn(true)} 
+                    disabled={isEndTurn}
+                >
+                    Завершить ход
+                </BlackJackButton>
+                <BlackJackScore>{`Ваш счет: ${userScore}`}</BlackJackScore>
+            </Container>
+
+            <Container className="vertical bottom">
+                {userCards.map((card, index) => 
+                    <ClassicCard 
+                        key={index} 
+                        cardData={card} 
+                        className="user-card" 
+                        style={{marginRight: `calc(9px - ${userCards.length * 8}px)`}}
+                    /> 
+                )}
+            </Container>
 
             {message}
-
-            <BlackJackScore style={{top: "20%"}}>{`Счет противника: ${enemyScore}`}</BlackJackScore>
-            <BlackJackButton onClick={() => getCard(userCards, setUserCards, deck, setDeck, 1)} disabled={!deck.length || isEndTurn || userScore > 21}>Взять карту</BlackJackButton>
-            <BlackJackButton onClick={() => setIsEndTurn(true)} disabled={isEndTurn} top="42%">Завершить ход</BlackJackButton>
-            <BlackJackScore style={{top: "51%"}}>{`Ваш счет: ${userScore}`}</BlackJackScore>
+            
         </GameWrapper>
     );
 };
