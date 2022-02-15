@@ -59,7 +59,8 @@ const BlackJackMessage = styled.h3`
 const shuffle = (arr) => arr.sort(() => (Math.random() > .5) ? 1 : -1);
 
 export function BlackJack() {
-    const deck = classicDeckData;
+    const defaultDeck = [...classicDeckData];
+    const [deck, setDeck] = useState(defaultDeck);
     const [userCards, setUserCards] = useState([]);
     const [enemyCards, setEnemyCards] = useState([]);
     const [isEndTurn, setIsEndTurn] = useState(false);
@@ -89,7 +90,10 @@ export function BlackJack() {
     useEffect(() => setEnemyScore(enemyCards.reduce((acc, {value}) => acc + value, 0)), [enemyCards]);
     useEffect(() => setUserScore(userCards.reduce((acc, {value}) => acc + value, 0)), [userCards]);
     useEffect(() => {
-        if (!isEndTurn) return;
+        if (!isEndTurn) {
+            setMessage("");
+            return;
+        } 
 
         let gameMessage = "";
         let messageClassName = "loose";    
@@ -147,7 +151,14 @@ export function BlackJack() {
                     Завершить ход
                 </BlackJackButton>
                 <BlackJackButton 
-                    onClick={() => window.location.reload()} 
+                    onClick={() => {
+                        setDeck(defaultDeck);
+                        setEnemyCards([]);
+                        setUserCards([]);
+                        setIsEndTurn(false);
+
+                        getCard(setUserCards, deck, 1)
+                    }} 
                     disabled={!isEndTurn}
                 >
                     Перезапустить
