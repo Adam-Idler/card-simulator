@@ -141,8 +141,16 @@ export function BlackJack() {
                 <BlackJackButton 
                     onClick={() => setIsEndTurn(true)} 
                     disabled={isEndTurn}
+                    style={{marginBottom: "10px"}}
+
                 >
                     Завершить ход
+                </BlackJackButton>
+                <BlackJackButton 
+                    onClick={() => window.location.reload()} 
+                    disabled={!isEndTurn}
+                >
+                    Перезапустить
                 </BlackJackButton>
                 <BlackJackScore>{`Ваш счет: ${userScore}`}</BlackJackScore>
             </Container>
