@@ -15,6 +15,7 @@ export const Container = styled.div`
     &.top {
         top: 0;
     }
+
     &.horizontal {
         flex-direction: column;
         align-items: center;
@@ -24,9 +25,17 @@ export const Container = styled.div`
     &.right {
         right: 20px;
     }
+
     &.left {
         left: 20px;
     }
+
+    &.middle {
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%)
+    }
+
     display: flex;
     justify-content: center;
     position: absolute;

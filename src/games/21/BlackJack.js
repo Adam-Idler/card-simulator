@@ -5,6 +5,8 @@ import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
 import { Container } from "../../components/Container";
 import { GameWrapper } from "../../components/GameWrapper";
 import { Deck } from "../../components/Deck";
+import { getCard } from "../../common/getCard";
+import { shuffle } from "../../common/shuffle";
 
 const BlackJackButton = styled.button`
     cursor: pointer;
@@ -56,8 +58,6 @@ const BlackJackMessage = styled.h3`
     }
 `;
 
-const shuffle = (arr) => arr.sort(() => (Math.random() > .5) ? 1 : -1);
-
 export function BlackJack() {
     const defaultDeck = [...classicDeckData];
     const [deck, setDeck] = useState(defaultDeck);
@@ -69,21 +69,6 @@ export function BlackJack() {
     const [userScore, setUserScore] = useState(0);
 
     const [message, setMessage] = useState(null);
-
-    
-    const getCard = (setCards, deck, count) => {
-        let currentCards = [];
-        for (let i = 0; i < count; i++) {
-            const currentCard = deck[deck.length - 1];
-            
-            currentCards.push(currentCard);
-
-            setCards(prevState => [...prevState, currentCard]);
-            deck.pop();
-        }
-        
-        return currentCards;
-    };
     
     useEffect(() => {shuffle(deck)}, []);
     useEffect(() => getCard(setUserCards, deck, 1), []);
@@ -119,7 +104,7 @@ export function BlackJack() {
     return (
         <GameWrapper>
             <Container className="horizontal left">
-                <Deck deck={deck} />
+            <Deck deck={deck} Card={ClassicCard} />
             </Container>
 
             <Container className="vertical top">
@@ -152,12 +137,10 @@ export function BlackJack() {
                 </BlackJackButton>
                 <BlackJackButton 
                     onClick={() => {
-                        setDeck(defaultDeck);
                         setEnemyCards([]);
                         setUserCards([]);
                         setIsEndTurn(false);
-
-                        getCard(setUserCards, deck, 1)
+                        setDeck(defaultDeck)
                     }} 
                     disabled={!isEndTurn}
                 >

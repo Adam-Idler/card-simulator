@@ -1,18 +1,9 @@
 import styled from "styled-components";
-import cardShirt from '../cardsTypes/classicCard/cardShirt.png';
 
 const DeckWrapper = styled.div`
     position: relative;
-    width: 207px;
-    height: 300px;
-`;
-
-const CardBackside = styled.div`
-    position: absolute;
-    width: 207px;
-    height: 300px;
-    background: url(${cardShirt}) no-repeat center;
-    background-size: cover;
+    width: 170px;
+    height: 230px;
 `;
 
 const CardCounter = styled.span`
@@ -23,11 +14,11 @@ const CardCounter = styled.span`
     right: -35px;
 `;
 
-export function Deck({ deck }) {
+export function Deck({ deck, Card }) {
     return (
         <DeckWrapper>
             <CardCounter>{deck.length}</CardCounter>
-            { deck.map( (card, i) => <CardBackside key={i} style={{top: `calc(0% - ${i/2}px)`, left: `calc(0px - ${i/4}px)`}} /> ) }
+            { deck.map( (card, i) => <Card key={i} cardData={card} style={{position: 'absolute', top: `calc(0% - ${i/2}px)`, left: `calc(0px - ${i/4}px)`}} backSide /> ) }
         </DeckWrapper>
     )
 }

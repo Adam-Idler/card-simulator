@@ -4,6 +4,7 @@ import heart from './suits/heart.png';
 import tambourine from './suits/tambourine.png';
 import cross from './suits/cross.png';
 import spades from './suits/spades.png';
+import cardShirt from './cardShirt.png';
 
 const Suit = styled.div`
     background: url(${ props => props.image }) center no-repeat;
@@ -68,7 +69,15 @@ const CardValue = styled.span`
     }
 `;
 
-export function ClassicCard({ cardData, style, className }) {
+const CardBackside = styled.div`
+    position: absolute;
+    width: inherit;
+    height: 245px;
+    background: url(${cardShirt}) no-repeat center;
+    background-size: cover;
+`;
+
+export function ClassicCard({ cardData, style, className, backSide }) {
     const color = cardData.suit === 'heart' || cardData.suit === 'tambourine' ? '#e10000' : 'black';
     
     switch (cardData.suit) {
@@ -87,16 +96,24 @@ export function ClassicCard({ cardData, style, className }) {
     }
 
     return (
-        <Card style={style} className={className}>
-            <CardValue color={color}>
-                {cardData.name}
-                <SuitMini image={cardData.image} />
-            </CardValue>
-            <CardValue color={color} className="reverse">
-                {cardData.name}
-                <SuitMini image={cardData.image} />
-            </CardValue>
-            <Suit image={cardData.image} />
+        <Card style={style} className={className} backSide={backSide}>
+            {!backSide 
+                ? 
+                    <>
+                        <CardValue color={color}>
+                            {cardData.name}
+                            <SuitMini image={cardData.image} />
+                        </CardValue>
+                        <CardValue color={color} className="reverse">
+                            {cardData.name}
+                            <SuitMini image={cardData.image} />
+                        </CardValue>
+                        <Suit image={cardData.image} />
+                    </>
+                :
+                    <CardBackside />
+                   
+            }
         </Card>
     );
 };

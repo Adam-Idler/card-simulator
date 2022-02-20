@@ -1,18 +1,17 @@
 import styled from "styled-components";
 
 export const Card = styled.div`
+    background: ${props => props.backSide ? 'transparent' : '#fff'};
     position: relative;
-    width: 200px;
-    min-width: 180px;
-    height: 280px;
-    background: white;
+    width: 170px;
+    height: 220px;
+    border: ${props => props.backSide ? '' : '0.5px solid #000'};
     opacity: 1;
-    border: .5px solid #000;
     border-radius: 7px;
     display: flex;
 
     &.user-card {
-        margin-bottom: -80px;
+        margin-bottom: -70px;
     }
 
     &:last-child {
