@@ -1,4 +1,6 @@
 import styled from "styled-components";
+import { PlaySide } from "../../components/PlaySide";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useEffect, useState } from "react";
 import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
@@ -9,51 +11,65 @@ import { getCard } from "../../common/getCard";
 import { shuffle } from "../../common/shuffle";
 
 export function Game101() {
-    const defaultDeck = [...classicDeckData];
-    const [deck, setDeck] = useState(defaultDeck);
-    const [userCards, setUserCards] = useState([]);
-    const [enemyCards, setEnemyCards] = useState([]);
+  const defaultDeck = [...classicDeckData];
+  const [deck, setDeck] = useState(defaultDeck);
+  const [userCards, setUserCards] = useState([]);
+  const [enemyCards, setEnemyCards] = useState([]);
 
-    useEffect(() => {shuffle(deck)}, []);
-    useEffect(() => getCard(setUserCards, deck, 3), []);
-    useEffect(() => getCard(setEnemyCards, deck, 4), []);
+  useEffect(() => { shuffle(deck) }, []);
+  useEffect(() => getCard(setUserCards, deck, 4), []);
+  useEffect(() => getCard(setEnemyCards, deck, 3), []);
 
-    return (
-        <GameWrapper>
-            <Container className="horizontal left">
-                <Deck deck={deck} Card={ClassicCard} />
-            </Container>
+  function handleOnDragEnd(result) {
+    if (!result.destination) return;
+    const items = Array.from(userCards);
+    const [reorderedItems] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItems);
 
-            <Container className="vertical top">
-                {enemyCards.map((card, index) => 
-                    <ClassicCard
-                        key={index} 
-                        cardData={card}
-                        backSide
-                        style={{marginRight: `calc(9px - ${enemyCards.length * 8}px)`, marginTop: '-70px'}} 
-                    />
-                )}
-            </Container>
+    setUserCards(items);
+  }
 
-            <Container className="middle">
-                
-            </Container>
+  return (
+    <GameWrapper>
+      <PlaySide className="left">
+        <Deck deck={deck} Card={ClassicCard} />
+      </PlaySide>
 
-            <Container className="vertical bottom">
+      <PlaySide className="middle">
+        <Container className="top">
+          {enemyCards.map((card, index) =>
+            <ClassicCard
+              key={index}
+              cardData={card}
+              backSide
+              style={{ marginRight: `calc(9px - ${enemyCards.length * 8}px)`, marginTop: '-70px' }}
+            />
+          )}
+        </Container>
+
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+          <Droppable droppableId="userCards" direction="horizontal">
+            {(provided) =>
+              <Container className="bottom" {...provided.droppableProps} ref={provided.innerRef}>
                 {userCards.map((card, index) => 
-                    <ClassicCard 
-                        key={index} 
-                        cardData={card} 
-                        className="user-card" 
-                        style={{marginRight: `calc(9px - ${userCards.length * 8}px)`}}
-                    /> 
+                  <Draggable key={`card-${index}`} draggableId={`card-${index}`} index={index}>
+                    {(provided) =>
+                      <ClassicCard
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        ref={provided.innerRef}
+                        cardData={card}
+                        className="user-card"
+                      />
+                    }
+                  </Draggable>
                 )}
-            </Container>
-
-            <Container className="horizontal right">
-                
-            </Container>
-
-        </GameWrapper>
-    );
+                {provided.placeholder}
+              </Container>
+            }
+          </Droppable>
+        </DragDropContext>
+      </PlaySide>
+    </GameWrapper>
+  );
 };

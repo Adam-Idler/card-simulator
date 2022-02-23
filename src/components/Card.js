@@ -1,20 +1,29 @@
+import React from "react";
 import styled from "styled-components";
 
-export const Card = styled.div`
+const CardElem = styled.div`
     background: ${props => props.backSide ? 'transparent' : '#fff'};
     position: relative;
     width: 170px;
-    height: 220px;
+    height: 230px;
     border: ${props => props.backSide ? '' : '0.5px solid #000'};
     opacity: 1;
     border-radius: 7px;
     display: flex;
+    user-select: none;
 
     &.user-card {
-        margin-bottom: -70px;
+        ${'' /* cursor: pointer; */}
+        margin-bottom: -68px;
+    }
+
+    .black-jack &.user-card {
+        ${'' /* cursor: default; */}
     }
 
     &:last-child {
         margin-right: 0 !important;
     }
 `;
+
+export const Card = React.forwardRef((props, ref) => <CardElem {...props} ref={ref} />)

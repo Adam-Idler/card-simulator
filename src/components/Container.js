@@ -1,42 +1,22 @@
+import React from "react";
 import styled from "styled-components";
 
-export const Container = styled.div`
-    &.vertical {
-        width: 70%;
-        height: 250px;
-        left: 50%;
-        transform: translateX(-50%);
-        
-    }
-    &.bottom {
-        bottom: 0;
-        align-items: flex-end;
-    }
-    &.top {
-        top: 0;
-    }
+const ContainerElem = styled.div`
+  display: flex;
+  align-self: center;
 
-    &.horizontal {
-        flex-direction: column;
-        align-items: center;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-    &.right {
-        right: 20px;
-    }
+  &.middle {
+      width: 100%;
+      height: 20%;
+  }
 
-    &.left {
-        left: 20px;
-    }
+  ${'' /* &.top {
+      align-self: center;
+  }
 
-    &.middle {
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%)
-    }
-
-    display: flex;
-    justify-content: center;
-    position: absolute;
+  &.bottom {
+      align-self: flex-end;
+  } */}
 `;
+
+export const Container = React.forwardRef((props, ref) => <ContainerElem {...props} ref={ref} />)
