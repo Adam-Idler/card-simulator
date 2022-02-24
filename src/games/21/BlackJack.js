@@ -1,4 +1,3 @@
-import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
@@ -8,61 +7,12 @@ import { GameWrapper } from "../../components/GameWrapper";
 import { Deck } from "../../components/Deck";
 import { getCard } from "../../common/getCard";
 import { shuffle } from "../../common/shuffle";
-
-const BlackJackButton = styled.button`
-  cursor: pointer;
-  background: transparent;
-  outline: none;
-  min-width: 180px;
-  font-size: 18px;
-  color: #eee;
-  border: 2px solid #eee;
-  border-radius: 8px;
-  padding: 5px 0px;
-  transition: opacity .2s, transform .1s;
-  ${props =>
-  props.disabled
-    ? 'opacity: .6; cursor: not-allowed;'
-    : ""
-}
-
-  &:hover {
-      opacity: .7;
-  }
-
-  &:active {
-      transform: scale(1.04);
-  }
-`;
-
-const BlackJackScore = styled.p`
-  display: flex;
-  color: #eee;
-  font-size: 18px;
-`;
-
-const BlackJackMessage = styled.h3`
-  margin: 0;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 42px;
-  text-align: center;
-  color: #eee;
-
-  &.win {
-      color: #03d203;
-  }
-
-  &.loose {
-      color: #e50b16;
-  }
-`;
+import { GameButton, GameMessage, GameText } from "../../components/gameUI";
 
 export function BlackJack() {
   const defaultDeck = [...classicDeckData];
   const [deck, setDeck] = useState(defaultDeck);
+
   const [userCards, setUserCards] = useState([]);
   const [enemyCards, setEnemyCards] = useState([]);
   const [isEndTurn, setIsEndTurn] = useState(false);
@@ -72,8 +22,7 @@ export function BlackJack() {
 
   const [message, setMessage] = useState(null);
 
-  useEffect(() => { shuffle(deck) }, []);
-  useEffect(() => getCard(setUserCards, deck, 1), []);
+  useEffect(() => shuffle(deck), []);
   useEffect(() => setEnemyScore(enemyCards.reduce((acc, { value }) => acc + value, 0)), [enemyCards]);
   useEffect(() => setUserScore(userCards.reduce((acc, { value }) => acc + value, 0)), [userCards]);
   useEffect(() => {
@@ -81,11 +30,11 @@ export function BlackJack() {
       setMessage("");
       return;
     }
-
+    
     let gameMessage = "";
-    let messageClassName = "loose";
+    let messageClassName = "loss";
     let enemyCardValues = 0;
-
+    
     while (enemyCardValues < 17) {
       let currentCard = getCard(setEnemyCards, deck, 1);
       enemyCardValues += currentCard.reduce((accumulator, { value }) => accumulator + value, 0);
@@ -100,8 +49,14 @@ export function BlackJack() {
       gameMessage = `Ничья!`;
     }
 
-    setMessage(<BlackJackMessage className={messageClassName}>{gameMessage}</BlackJackMessage>)
+    setMessage(<GameMessage className={messageClassName}>{gameMessage}</GameMessage>)
   }, [isEndTurn]);
+  useEffect(() => {
+    if (!userCards.length) 
+      setMessage(<GameMessage>Возьмите карту!</GameMessage>);
+    else 
+      setMessage("");
+  }, [userCards]);
 
   return (
     <GameWrapper className="black-jack">
@@ -133,25 +88,25 @@ export function BlackJack() {
       </PlaySide>
 
       <PlaySide className="right">
-        <BlackJackScore>{`Счет противника: ${enemyScore}`}</BlackJackScore>
+        <GameText>{`Счет противника: ${enemyScore}`}</GameText>
         
-        <BlackJackButton
+        <GameButton
           onClick={() => getCard(setUserCards, deck, 1)}
           disabled={!deck.length || isEndTurn || userScore > 21}
           style={{ marginBottom: "10px" }}
         >
           Взять карту
-        </BlackJackButton>
+        </GameButton>
 
-        <BlackJackButton
+        <GameButton
           onClick={() => setIsEndTurn(true)}
           disabled={isEndTurn}
           style={{ marginBottom: "10px" }}
 
         >
           Завершить ход
-        </BlackJackButton>
-        <BlackJackButton
+        </GameButton>
+        <GameButton
           onClick={() => {
             setEnemyCards([]);
             setUserCards([]);
@@ -161,9 +116,9 @@ export function BlackJack() {
           disabled={!isEndTurn}
         >
           Перезапустить
-        </BlackJackButton>
+        </GameButton>
 
-        <BlackJackScore>{`Ваш счет: ${userScore}`}</BlackJackScore>
+        <GameText>{`Ваш счет: ${userScore}`}</GameText>
       </PlaySide>
 
       {message}

@@ -6,8 +6,8 @@ function App() {
   return (
     <>
       <FontStyles />
-      {/* <BlackJack /> */}
-      <Game101 />
+      <BlackJack />
+      {/* <Game101 /> */}
     </>
   );
 }
