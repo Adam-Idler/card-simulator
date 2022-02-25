@@ -3,20 +3,23 @@ import styled from "styled-components";
 
 const ContainerElem = styled.div`
   display: flex;
-  align-self: center;
+  justify-self: center;
 
   &.middle {
-      width: 100%;
-      height: 20%;
+    width: 170px;
+    height: 33%;
+    justify-content: center;
   }
 
-  ${'' /* &.top {
-      align-self: center;
+  &.top {
+    justify-self: flex-start;
   }
 
   &.bottom {
-      align-self: flex-end;
-  } */}
+    height: 165px;
+    justify-self: flex-end;
+    align-items: flex-end;
+  }
 `;
 
 export const Container = React.forwardRef((props, ref) => <ContainerElem {...props} ref={ref} />)
