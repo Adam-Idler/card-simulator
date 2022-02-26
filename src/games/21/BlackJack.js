@@ -80,7 +80,6 @@ export function BlackJack() {
             <ClassicCard
               key={index}
               cardData={card}
-              className="user-card"
               style={{ marginRight: `calc(9px - ${userCards.length * 8}px)` }}
             />
           )}

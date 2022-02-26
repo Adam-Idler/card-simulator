@@ -17,6 +17,7 @@ const ContainerElem = styled.div`
 
   &.bottom {
     height: 165px;
+    max-width: 100%;
     justify-self: flex-end;
     align-items: flex-end;
   }

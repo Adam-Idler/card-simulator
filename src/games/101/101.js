@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import { PlaySide } from "../../components/PlaySide";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
 import { Container } from "../../components/Container";
 import { GameWrapper } from "../../components/GameWrapper";
+import { GameButton, GameMessage, GameText } from "../../components/gameUI";
 import { Deck } from "../../components/Deck";
 import { getCard } from "../../common/getCard";
 import { shuffle } from "../../common/shuffle";
@@ -18,13 +19,25 @@ const reorder = (list, startIndex, endIndex) => {
   return items;
 };
 
+function checkCardDrawing(card, lastPlayedCard) {
+  if (card.value === lastPlayedCard.value || card.suit === lastPlayedCard.suit) {
+    return true;
+  }
+  return false;
+};
+
 const move = (source, destination, droppableSource, droppableDestination) => {
-  const sourceClone = source;
-  const destClone = destination;
-  const [reorderedItems] = sourceClone.splice(droppableSource.index, 1);
+  const sourceClone = [...source];
+  const destClone = [...destination];
 
-  destClone.splice(droppableDestination.index, 0, reorderedItems);
+  if (!checkCardDrawing(sourceClone[droppableSource.index], destClone[0])) {
+    return null;
+  } 
 
+  const [removedItem] = sourceClone.splice(droppableSource.index, 1);
+  
+  destClone.splice(droppableDestination.index, 0, removedItem);
+  
   const result = {};
   result[droppableSource.droppableId] = sourceClone;
   result[droppableDestination.droppableId] = destClone;
@@ -43,12 +56,14 @@ export function Game101() {
   const [userCards, setUserCards] = useState([]);
   const [enemyCards, setEnemyCards] = useState([]);
   const [gameBoardCards, setGameBoardCards] = useState([]);
+  const [disabled, setDisabled] = useState(false);
+  const [isGetCard, setIsGetCard] = useState(false);
 
-  useEffect(() => { shuffle(deck) }, []);
-  useEffect(() => getCard(setUserCards, deck, 4), []);
-  useEffect(() => getCard(setEnemyCards, deck, 3), []);
+  useEffect(() => shuffle(deck), []);
+  useEffect(() => getCard(setUserCards, deck, 5), []);
+  useEffect(() => getCard(setEnemyCards, deck, 4), []);
   useEffect(() => getCard(setGameBoardCards, deck, 1), []);
-
+  
   function handleOnDragEnd(result) {
     const { source, destination } = result;
 
@@ -70,13 +85,21 @@ export function Game101() {
         destination
       );
 
+      if (!result) return;
+
       result.gameBoard[0].rotateValue = randomInteger(-5, 5);
 
       setUserCards(result.userCards);
       setGameBoardCards(result.gameBoard);
     }
   }
-  
+
+  useEffect(() => {
+    if (isGetCard) return;
+    
+    let result = userCards.every(card => card.value !== gameBoardCards[0].value && card.suit !== gameBoardCards[0].suit);
+    setDisabled(!result)
+  }); 
 
   return (
     <GameWrapper>
@@ -99,17 +122,17 @@ export function Game101() {
         <DragDropContext onDragEnd={handleOnDragEnd}>
           <Droppable droppableId="gameBoard">
             {(provided) =>
-                <Container className="middle" {...provided.droppableProps} ref={provided.innerRef} style={{position: 'relative'}}>
-                  {gameBoardCards.reverse().map((card, index) => 
-                    <ClassicCard
-                      key={`game-board-card-${index}`}
-                      cardData={card}
-                      style={{position: 'absolute', zIndex: `${1000-index}`, transform: `rotate(${card?.rotateValue}deg)`}}
-                    />
-                  )}
-                  {provided.placeholder}
-                </Container>
-              }
+              <Container className="middle" {...provided.droppableProps} ref={provided.innerRef} style={{position: 'relative'}}>
+                {gameBoardCards.reverse().map((card, index) => 
+                  <ClassicCard
+                    key={`game-board-card-${index}`}
+                    cardData={card}
+                    style={{position: 'absolute', zIndex: `${1000-index}`, transform: `rotate(${card?.rotateValue}deg)`}}
+                  />
+                )}
+                {provided.placeholder}
+              </Container>
+            }
           </Droppable>
           <Droppable droppableId="userCards" direction="horizontal">
             {(provided) =>
@@ -122,7 +145,14 @@ export function Game101() {
                         {...provided.dragHandleProps}
                         ref={provided.innerRef}
                         cardData={card}
-                        className="user-card"
+                        className={
+                          `user-card 
+                          ${card.value === gameBoardCards[0].value || 
+                            card.suit === gameBoardCards[0].suit 
+                              ? 'can-played' 
+                              : 'cant-played'
+                          }`
+                        }
                       />
                     }
                   </Draggable>
@@ -132,6 +162,31 @@ export function Game101() {
             }
           </Droppable>
         </DragDropContext>
+      </PlaySide>
+
+      <PlaySide className="right">
+        <GameButton
+          onClick={() => {
+            getCard(setUserCards, deck, 1); 
+            setDisabled(true); 
+            setIsGetCard(true);
+          }}
+          disabled={disabled}
+          style={{ marginBottom: "10px" }}
+        >
+          Взять карту
+        </GameButton>
+
+        <GameButton
+          onClick={() => {
+            let temp = [...userCards];
+            setUserCards(enemyCards);
+            setEnemyCards(temp);
+          }}
+          disabled={!isGetCard && disabled}
+        >
+          Завершить ход
+        </GameButton>
       </PlaySide>
     </GameWrapper>
   );
