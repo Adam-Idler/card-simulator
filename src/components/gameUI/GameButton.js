@@ -5,6 +5,7 @@ export const GameButton = styled.button`
   background: transparent;
   outline: none;
   min-width: 180px;
+  max-width: 200px;
   font-size: 18px;
   color: #eee;
   border: 2px solid #eee;

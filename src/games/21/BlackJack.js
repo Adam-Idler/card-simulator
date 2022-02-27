@@ -20,7 +20,7 @@ export function BlackJack() {
   const [enemyScore, setEnemyScore] = useState(0);
   const [userScore, setUserScore] = useState(0);
 
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState("");
 
   useEffect(() => shuffle(deck), []);
   useEffect(() => setEnemyScore(enemyCards.reduce((acc, { value }) => acc + value, 0)), [enemyCards]);

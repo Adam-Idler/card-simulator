@@ -63,10 +63,10 @@ const CardValue = styled.span`
   color: ${props => props.color};
 
   &.reverse {
-      transform: rotate(-180deg);
-      bottom: 0px;
-      right: 10px;
-      left: auto;
+    transform: rotate(-180deg);
+    bottom: 0px;
+    right: 10px;
+    left: auto;
   }
 `;
 
