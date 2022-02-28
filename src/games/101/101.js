@@ -6,11 +6,11 @@ import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
 import { Container } from "../../components/Container";
 import { GameWrapper } from "../../components/GameWrapper";
-import { GameButton, GameMessage, GameText } from "../../components/gameUI";
+import { GameButton, GameMessage, GameText, GameModal } from "../../components/gameUI";
 import { Deck } from "../../components/Deck";
 import { getCard } from "../../common/getCard";
 import { shuffle } from "../../common/shuffle";
-import { declOfNum } from "../../helpers/declOfNum";
+import { declOfNum, randomInteger } from "../../helpers";
 
 const reorder = (list, startIndex, endIndex) => {
   const items = list;
@@ -27,41 +27,11 @@ function checkCardDrawing(card, lastPlayedCard) {
   return false;
 };
 
-function randomInteger(min, max) {
-  let rand = min + Math.random() * (max - min);
-  return Math.floor(rand);
-};
-
-const Modal = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 10001;
-  width: 100vw;
-  height: 100vh;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, .8);
-`;
-
-const ModalInner = styled.div`
-  width: 60%;
-  height: 40%;
-  min-height: 40%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-`;
-
 export function Game101() {
   const defaultDeck = [...classicDeckData];
 
   const [deck, setDeck] = useState(defaultDeck);
-  const [userCards, setUserCards] = useState([]);
-  const [enemyCards, setEnemyCards] = useState([]);
-  const [gameBoardCards, setGameBoardCards] = useState([]);
+  const [gameBoard, setGameBoard] = useState({count: 0, cards: []});
 
   const [disabled, setDisabled] = useState(false);
   const [isGetCard, setIsGetCard] = useState(false);
@@ -69,70 +39,162 @@ export function Game101() {
   const [isRoundOver, setIsRoundOver] = useState(false);
 
   const [isPlayerOneTurn, setIsPlayerOneTurn] = useState(true);
-  const [playerOneScore, setPlayerOneScore] = useState(0);
-  const [playerTwoScore, setPlayerTwoScore] = useState(0);
+  const [playerOne, setPlayerOne] = useState({name: 'Игрок 1', score: 0, cards: []});
+  const [playerTwo, setPlayerTwo] = useState({name: 'Игрок 2', score: 0, cards: []});
+  const [winner, setWinner] = useState({});
+  const [loser, setLoser] = useState({});
 
   const [message, setMessage] = useState("");
 
   useEffect(() => shuffle(deck), []);
-  useEffect(() => getCard(setUserCards, deck, 1), []);
-  useEffect(() => getCard(setEnemyCards, deck, 0), []);
-  useEffect(() => getCard(setGameBoardCards, deck, 1), []);
+  useEffect(() => getCard(setPlayerOne, deck, 4), []);
+  useEffect(() => getCard(setPlayerTwo, deck, 5), []);
+  useEffect(() => getCard(setGameBoard, deck, 1), []);
+
   useEffect(() => {
-    let result = userCards.every(card => 
-      card.value !== gameBoardCards[0].value && 
-      card.suit !== gameBoardCards[0].suit && 
+    let result = playerOne?.cards?.every(card =>
+      card.value !== gameBoard.cards[0].value &&
+      card.suit !== gameBoard.cards[0].suit &&
       card.name !== 'Q'
     );
 
     setDisabled(!result);
     if (isGetCard && result) setIsEndTurn(true);
-    if (gameBoardCards.length !== 1 && gameBoardCards[0]?.name === '9' && result) setDisabled(false);
+    if (gameBoard.cards && gameBoard.cards.length !== 1 && gameBoard.cards[0]?.name === '9' && result) {setIsEndTurn(false);setDisabled(false); setIsGetCard(false)} 
   });
 
   useEffect(() => {
     setIsRoundOver(false);
-    if (!userCards.length || !enemyCards.length) {
+    if (playerOne.score > 101 || playerTwo.score > 101) {
       setIsRoundOver(true);
 
-      const lossArray = !userCards.length ? [...enemyCards] : [...userCards];
-      const lossPoints = lossArray.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0);
+      if (playerOne.score > 101) {
+        setWinner({...playerTwo, method: 'game'});
+        setLoser(playerOne);
+      } else {
+        setWinner({...playerOne, method: 'game'});
+        setLoser(playerTwo);
+      }
+    } else if (!playerOne.cards.length || !playerTwo.cards.length) {
+      setIsRoundOver(true);
 
-      !userCards.length 
-        ? setPlayerTwoScore(prev => prev + lossPoints)
-        : setPlayerOneScore(prev => prev + lossPoints)
+      if (!playerOne.cards.length) {
+        setWinner({...playerOne, method: 'round'});
+        setLoser(playerTwo);
+      } else {
+        setWinner({...playerTwo, method: 'round'});
+        setLoser(playerOne);
+      }
+    }
+  }, [playerOne.cards.length, playerTwo.cards.length])
 
+  useEffect(() => {
+    const lossPoints = loser?.cards?.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0) || 0;
+
+    !playerOne.cards.length
+      ? setPlayerTwo(prev => ({...prev, score: prev.score + lossPoints}))
+      : setPlayerOne(prev => ({...prev, score: prev.score + lossPoints}))
+
+    if (winner.method === 'round') {
       setMessage(
-        <GameMessage style={{position: 'static', transform: 'none'}}>
-          <span style={{color: '#15ac13'}}>Игрок {isPlayerOneTurn ? '1' : '2'}</span> победил.
-          <br />
-          <span style={{color: '#863232'}}>Игрок {isPlayerOneTurn ? '2' : '1'}</span> получает <i>{declOfNum(lossPoints, ['очко', 'очка', 'очков'])}</i>.
-        </GameMessage>
+        <>
+          <GameMessage style={{ position: 'static', transform: 'none' }}>
+            <span style={{ color: '#15ac13' }}>{winner.name}</span> победил.
+            <br />
+            <span style={{ color: '#863232' }}>{loser.name}</span> получает <i>{declOfNum(lossPoints, ['очко', 'очка', 'очков'])}</i>.
+          </GameMessage>
+          <GameButton
+            onClick={() => {
+              setIsRoundOver(false);
+              setIsPlayerOneTurn(true);
+              setDisabled(false);
+              setIsGetCard(false);
+              setIsEndTurn(false);
+              shuffle(defaultDeck);
+
+              setGameBoard({count: 0, cards: []});
+              setPlayerOne(prev => ({...prev, cards: []}));
+              setPlayerTwo(prev => ({...prev, cards: []}));
+
+              setWinner({});
+              setLoser({});
+
+              getCard(setPlayerOne, defaultDeck, 4);
+              getCard(setPlayerTwo, defaultDeck, 5);
+              getCard(setGameBoard, defaultDeck, 1);
+
+              setDeck([...defaultDeck]);
+            }}
+            style={{ marginTop: '30px', maxWidth: '350px', fontSize: '28px', padding: '8px 15px' }}
+          >
+            Перезапустить
+          </GameButton>
+        </>
       )
     }
-  }, [userCards.length, enemyCards.length]);
+    if (winner.method === 'game') {
+      setMessage("");
+      setIsRoundOver(true);
+
+      setMessage(
+        <>
+          <GameMessage style={{ position: 'static', transform: 'none' }}>
+            <span style={{ color: '#15ac13' }}>{winner.name}</span> выиграл.
+            <br />
+            <span style={{ color: '#863232' }}>{loser.name}</span> проиграл, набрав {declOfNum(loser.score, ['очко', 'очка', 'очков'])} 
+          </GameMessage>
+          <GameButton
+            onClick={() => {
+              setIsRoundOver(false);
+              setIsPlayerOneTurn(true);
+              setDisabled(false);
+              setIsGetCard(false);
+              setIsEndTurn(false);
+              shuffle(defaultDeck);
+
+              setGameBoard({count: 0, cards: []});
+              setPlayerOne(prev => ({...prev, name: prev.name, score: 0, cards: []}));
+              setPlayerTwo(prev => ({...prev, name: prev.name, score: 0, cards: []}));
+
+              setWinner({});
+              setLoser({});
+
+              getCard(setPlayerOne, defaultDeck, 4);
+              getCard(setPlayerTwo, defaultDeck, 5);
+              getCard(setGameBoard, defaultDeck, 1);
+
+              setDeck([...defaultDeck]);
+            }}
+            style={{ marginTop: '30px', maxWidth: '350px', fontSize: '28px', padding: '8px 15px' }}
+          >
+            Начать заново
+          </GameButton>
+        </>
+      )
+    }
+  }, [isRoundOver]);
 
   function move(source, destination, droppableSource, droppableDestination) {
     if (isEndTurn) return;
-  
+
     const sourceClone = [...source];
     const destClone = [...destination];
-  
+
     if (!checkCardDrawing(sourceClone[droppableSource.index], destClone[0])) {
       return null;
-    } 
-  
+    }
+
     const [removedItem] = sourceClone.splice(droppableSource.index, 1);
-    
+
     destClone.splice(droppableDestination.index, 0, removedItem);
-    
+
     const result = {};
     result[droppableSource.droppableId] = sourceClone;
     result[droppableDestination.droppableId] = destClone;
-  
+
     return result;
   };
-  
+
   function handleOnDragEnd(result) {
     const { source, destination } = result;
 
@@ -140,16 +202,16 @@ export function Game101() {
 
     if (source.droppableId === destination.droppableId) {
       const items = reorder(
-        userCards,
+        playerOne.cards,
         source.index,
         destination.index
       );
 
-      setUserCards(items);
+      setPlayerOne(prev => ({...prev, cards: items}));
     } else {
       const result = move(
-        userCards,
-        gameBoardCards,
+        playerOne.cards,
+        gameBoard.cards,
         source,
         destination
       );
@@ -161,24 +223,24 @@ export function Game101() {
       let lastCard = result.gameBoard[0];
       if (lastCard.name === '6') {
         setIsEndTurn(false);
-        getCard(setEnemyCards, deck, 1);
+        getCard(setPlayerTwo, deck, 1);
       } else if (lastCard.name === '7') {
         setIsEndTurn(false);
         if (lastCard.suit === 'spades') {
-          getCard(setEnemyCards, deck, 4);
+          getCard(setPlayerTwo, deck, 4);
         } else {
-          getCard(setEnemyCards, deck, 2);
+          getCard(setPlayerTwo, deck, 2);
         }
       } else if (lastCard.name === 'K' && lastCard.suit === 'spades') {
-        getCard(setEnemyCards, deck, 4);
+        getCard(setPlayerTwo, deck, 4);
       } else if (lastCard.name === 'A' || lastCard.name === '9') {
         setIsEndTurn(false);
       }
 
       result.gameBoard[0].rotateValue = randomInteger(-5, 5);
 
-      setUserCards(result.userCards);
-      setGameBoardCards(result.gameBoard);
+      setPlayerOne(prev => ({...prev, cards: result.playerOne}));
+      setGameBoard(prev => ({...prev, cards: result.gameBoard}));
     }
   }
 
@@ -190,12 +252,12 @@ export function Game101() {
 
       <PlaySide className="middle">
         <Container className="top">
-          {enemyCards.map((card, index) =>
+          {playerTwo.cards?.map((card, index) =>
             <ClassicCard
               key={index}
               cardData={card}
               backSide={!isRoundOver}
-              style={{ marginRight: `calc(9px - ${enemyCards.length * 8}px)`, marginTop: '-70px', zIndex: `${1000-index}` }}
+              style={{ marginRight: `calc(9px - ${playerTwo.cards.length * 8}px)`, marginTop: '-70px', zIndex: `${1000 - index}` }}
             />
           )}
         </Container>
@@ -203,22 +265,22 @@ export function Game101() {
         <DragDropContext onDragEnd={handleOnDragEnd}>
           <Droppable droppableId="gameBoard">
             {(provided) =>
-              <Container className="middle" {...provided.droppableProps} ref={provided.innerRef} style={{position: 'relative'}}>
-                {gameBoardCards.reverse().map((card, index) => 
+              <Container className="middle" {...provided.droppableProps} ref={provided.innerRef} style={{ position: 'relative' }}>
+                {gameBoard.cards?.reverse().map((card, index) =>
                   <ClassicCard
                     key={`game-board-card-${index}`}
                     cardData={card}
-                    style={{position: 'absolute', zIndex: `${1000-index}`, transform: `rotate(${card?.rotateValue}deg)`}}
+                    style={{ position: 'absolute', zIndex: `${1000 - index}`, transform: `rotate(${index && card?.rotateValue}deg)` }}
                   />
                 )}
                 {provided.placeholder}
               </Container>
             }
           </Droppable>
-          <Droppable droppableId="userCards" direction="horizontal">
+          <Droppable droppableId="playerOne" direction="horizontal">
             {(provided) =>
               <Container className="bottom" {...provided.droppableProps} ref={provided.innerRef}>
-                {userCards.map((card, index) => 
+                {playerOne.cards?.map((card, index) =>
                   <Draggable key={`card-${index}`} draggableId={`card-${index}`} index={index}>
                     {(provided) =>
                       <ClassicCard
@@ -228,11 +290,11 @@ export function Game101() {
                         cardData={card}
                         className={
                           `user-card 
-                          ${(card.value === gameBoardCards[0].value || 
-                            card.suit === gameBoardCards[0].suit ||
+                          ${(card.value === gameBoard.cards[0].value ||
+                            card.suit === gameBoard.cards[0].suit ||
                             card.name === 'Q') && !isEndTurn
-                              ? 'can-played' 
-                              : 'cant-played'
+                            ? 'can-played'
+                            : 'cant-played'
                           }`
                         }
                       />
@@ -247,11 +309,11 @@ export function Game101() {
       </PlaySide>
 
       <PlaySide className="right">
-        <GameText GameText>Игрок {isPlayerOneTurn ? 2 : 1}: {isPlayerOneTurn ? playerTwoScore : playerOneScore}</GameText>
+        <GameText GameText>{playerTwo.name}: {playerTwo.score}</GameText>
 
         <GameButton
           onClick={() => {
-            getCard(setUserCards, deck, 1); 
+            getCard(setPlayerOne, deck, 1);
             setIsGetCard(true);
           }}
           disabled={disabled || isEndTurn || isRoundOver}
@@ -262,50 +324,26 @@ export function Game101() {
 
         <GameButton
           onClick={() => {
-            let temp = [...userCards];
-            setUserCards(enemyCards);
-            setEnemyCards(temp);
+            let temp = {...playerOne};
+            setPlayerOne(playerTwo);
+            setPlayerTwo(temp);
 
             setIsPlayerOneTurn(!isPlayerOneTurn);
             setIsGetCard(false);
             setIsEndTurn(false);
           }}
           disabled={!isEndTurn || isRoundOver}
-          style={{transition: 'box-shadow .2s', boxShadow: `${isEndTurn ? '0px 0px 10px 5px #15ac13' : ''}`}}
+          style={{ transition: 'box-shadow .2s', boxShadow: `${isEndTurn ? '0px 0px 10px 5px #15ac13' : ''}` }}
         >
           Завершить ход
         </GameButton>
 
-        <GameText>Игрок {isPlayerOneTurn ? 1 : 2}: {isPlayerOneTurn ? playerOneScore : playerTwoScore}</GameText>
+        <GameText>{playerOne.name}: {playerOne.score}</GameText>
       </PlaySide>
 
-      <Modal style={{display: `${isRoundOver ? 'flex' : 'none'}`}}>
-        <ModalInner>
-          {message}
-          <GameButton
-            onClick={() => {
-              setUserCards([]);
-              setEnemyCards([]);
-              setGameBoardCards([]);
-              setIsRoundOver(false);
-              setIsPlayerOneTurn(true);
-              setDisabled(false);
-              setIsGetCard(false);
-              setIsEndTurn(false);
-              shuffle(defaultDeck);
-
-              getCard(setUserCards, defaultDeck, 1);
-              getCard(setEnemyCards, defaultDeck, 1);
-              getCard(setGameBoardCards, defaultDeck, 1);
-
-              setDeck([...defaultDeck]);
-            }}
-            style={{marginTop: '30px', maxWidth: '350px', fontSize: '28px', padding: '8px 15px'}}
-          >
-            Перезапустить
-          </GameButton>
-        </ModalInner>
-      </Modal>
+      <GameModal style={{ display: `${isRoundOver ? 'flex' : 'none'}` }}>
+        {message}
+      </GameModal>
     </GameWrapper>
   );
 };

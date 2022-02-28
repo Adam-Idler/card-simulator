@@ -5,7 +5,7 @@ export const getCard = (setCards, deck, count) => {
 
     currentCards.push(currentCard);
 
-    setCards(prevState => [...prevState, currentCard]);
+    setCards(prevState => ({...prevState, cards: [...prevState.cards ?? [], currentCard]}));
     deck.pop();
   }
 

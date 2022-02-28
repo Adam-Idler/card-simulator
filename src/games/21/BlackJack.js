@@ -13,18 +13,15 @@ export function BlackJack() {
   const defaultDeck = [...classicDeckData];
   const [deck, setDeck] = useState(defaultDeck);
 
-  const [userCards, setUserCards] = useState([]);
-  const [enemyCards, setEnemyCards] = useState([]);
+  const [user, setUser] = useState({cards: [], score: 0});
+  const [enemy, setEnemy] = useState({cards: [], score: 0});
   const [isEndTurn, setIsEndTurn] = useState(false);
-
-  const [enemyScore, setEnemyScore] = useState(0);
-  const [userScore, setUserScore] = useState(0);
 
   const [message, setMessage] = useState("");
 
   useEffect(() => shuffle(deck), []);
-  useEffect(() => setEnemyScore(enemyCards.reduce((acc, { value }) => acc + value, 0)), [enemyCards]);
-  useEffect(() => setUserScore(userCards.reduce((acc, { value }) => acc + value, 0)), [userCards]);
+  useEffect(() => setEnemy(prev => ({...prev, score: enemy.cards.reduce((acc, { value }) => acc + value, 0)})), [enemy.cards]);
+  useEffect(() => setUser(prev => ({...prev, score: user.cards.reduce((acc, { value }) => acc + value, 0)})), [user.cards]);
   useEffect(() => {
     if (!isEndTurn) {
       setMessage("");
@@ -36,13 +33,13 @@ export function BlackJack() {
     let enemyCardValues = 0;
     
     while (enemyCardValues < 17) {
-      let currentCard = getCard(setEnemyCards, deck, 1);
+      let currentCard = getCard(setEnemy, deck, 1);
       enemyCardValues += currentCard.reduce((accumulator, { value }) => accumulator + value, 0);
     }
 
-    if (enemyCardValues > userScore && enemyCardValues <= 21 || userScore > 21) {
+    if (enemyCardValues > user.score && enemyCardValues <= 21 || user.score > 21) {
       gameMessage = `Вы проиграли!`;
-    } else if (userScore > enemyCardValues || enemyCardValues > 21) {
+    } else if (user.score > enemyCardValues || enemyCardValues > 21) {
       gameMessage = `Вы выиграли!`;
       messageClassName = "win";
     } else {
@@ -52,11 +49,11 @@ export function BlackJack() {
     setMessage(<GameMessage className={messageClassName}>{gameMessage}</GameMessage>)
   }, [isEndTurn]);
   useEffect(() => {
-    if (!userCards.length) 
+    if (!user.cards.length) 
       setMessage(<GameMessage>Возьмите карту!</GameMessage>);
     else 
       setMessage("");
-  }, [userCards]);
+  }, [user.cards]);
 
   return (
     <GameWrapper className="black-jack">
@@ -66,32 +63,32 @@ export function BlackJack() {
 
       <PlaySide className="middle">
         <Container>
-          {enemyCards.map((card, index) =>
+          {enemy.cards.map((card, index) =>
             <ClassicCard
               key={index}
               cardData={card}
-              style={{ marginRight: `calc(9px - ${enemyCards.length * 8}px)` }}
+              style={{ marginRight: `calc(9px - ${enemy.cards.length * 8}px)` }}
             />
           )}
         </Container>
 
         <Container className="bottom">
-          {userCards.map((card, index) =>
+          {user.cards.map((card, index) =>
             <ClassicCard
               key={index}
               cardData={card}
-              style={{ marginRight: `calc(9px - ${userCards.length * 8}px)` }}
+              style={{ marginRight: `calc(9px - ${user.cards.length * 8}px)` }}
             />
           )}
         </Container>
       </PlaySide>
 
       <PlaySide className="right">
-        <GameText>{`Счет противника: ${enemyScore}`}</GameText>
+        <GameText>{`Счет противника: ${enemy.score}`}</GameText>
         
         <GameButton
-          onClick={() => getCard(setUserCards, deck, 1)}
-          disabled={!deck.length || isEndTurn || userScore > 21}
+          onClick={() => getCard(setUser, deck, 1)}
+          disabled={!deck.length || isEndTurn || user.score > 21}
           style={{ marginBottom: "10px" }}
         >
           Взять карту
@@ -107,17 +104,18 @@ export function BlackJack() {
         </GameButton>
         <GameButton
           onClick={() => {
-            setEnemyCards([]);
-            setUserCards([]);
+            setEnemy({cards: []});
+            setUser({cards: []});
             setIsEndTurn(false);
-            setDeck(defaultDeck)
+            shuffle(defaultDeck);
+            setDeck([...defaultDeck]);
           }}
           disabled={!isEndTurn}
         >
           Перезапустить
         </GameButton>
 
-        <GameText>{`Ваш счет: ${userScore}`}</GameText>
+        <GameText>{`Ваш счет: ${user.score}`}</GameText>
       </PlaySide>
 
       {message}
