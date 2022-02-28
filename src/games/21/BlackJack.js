@@ -23,6 +23,13 @@ export function BlackJack() {
   useEffect(() => setEnemy(prev => ({...prev, score: enemy.cards.reduce((acc, { value }) => acc + value, 0)})), [enemy.cards]);
   useEffect(() => setUser(prev => ({...prev, score: user.cards.reduce((acc, { value }) => acc + value, 0)})), [user.cards]);
   useEffect(() => {
+    if (!user.cards.length) 
+      setMessage(<GameMessage>Возьмите карту!</GameMessage>);
+    else 
+      setMessage("");
+  }, [user.cards]);
+  
+  useEffect(() => {
     if (!isEndTurn) {
       setMessage("");
       return;
@@ -48,12 +55,6 @@ export function BlackJack() {
 
     setMessage(<GameMessage className={messageClassName}>{gameMessage}</GameMessage>)
   }, [isEndTurn]);
-  useEffect(() => {
-    if (!user.cards.length) 
-      setMessage(<GameMessage>Возьмите карту!</GameMessage>);
-    else 
-      setMessage("");
-  }, [user.cards]);
 
   return (
     <GameWrapper className="black-jack">

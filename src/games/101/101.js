@@ -29,16 +29,14 @@ function checkCardDrawing(card, lastPlayedCard) {
 
 export function Game101() {
   const defaultDeck = [...classicDeckData];
-
   const [deck, setDeck] = useState(defaultDeck);
-  const [gameBoard, setGameBoard] = useState({count: 0, cards: []});
-
+  
   const [disabled, setDisabled] = useState(false);
   const [isGetCard, setIsGetCard] = useState(false);
   const [isEndTurn, setIsEndTurn] = useState(false);
   const [isRoundOver, setIsRoundOver] = useState(false);
-
-  const [isPlayerOneTurn, setIsPlayerOneTurn] = useState(true);
+  
+  const [gameBoard, setGameBoard] = useState({count: 0, cards: []});
   const [playerOne, setPlayerOne] = useState({name: 'Игрок 1', score: 0, cards: []});
   const [playerTwo, setPlayerTwo] = useState({name: 'Игрок 2', score: 0, cards: []});
   const [winner, setWinner] = useState({});
@@ -46,13 +44,16 @@ export function Game101() {
 
   const [message, setMessage] = useState("");
 
-  useEffect(() => shuffle(deck), []);
-  useEffect(() => getCard(setPlayerOne, deck, 4), []);
-  useEffect(() => getCard(setPlayerTwo, deck, 5), []);
-  useEffect(() => getCard(setGameBoard, deck, 1), []);
+  useEffect(() => {
+    shuffle(deck);
+    getCard(setPlayerOne, deck, 5);
+    getCard(setPlayerTwo, deck, 4);
+    getCard(setGameBoard, deck, 1);
+
+  }, []);
 
   useEffect(() => {
-    let result = playerOne?.cards?.every(card =>
+    let result = playerOne.cards.every(card =>
       card.value !== gameBoard.cards[0].value &&
       card.suit !== gameBoard.cards[0].suit &&
       card.name !== 'Q'
@@ -61,11 +62,25 @@ export function Game101() {
     setDisabled(!result);
     if (isGetCard && result) setIsEndTurn(true);
     if (gameBoard.cards && gameBoard.cards.length !== 1 && gameBoard.cards[0]?.name === '9' && result) {setIsEndTurn(false);setDisabled(false); setIsGetCard(false)} 
-  });
+  }, [playerOne.cards]);
 
   useEffect(() => {
-    setIsRoundOver(false);
-    if (playerOne.score > 101 || playerTwo.score > 101) {
+    if (!deck.length) {
+      shuffle(defaultDeck);
+      setGameBoard({count: 0, cards: []});
+      getCard(setGameBoard, defaultDeck, 1);
+      setDeck([...defaultDeck]);
+    }
+  }, [deck.length])
+
+  useEffect(() => {
+    if (playerOne.score === 101 || playerTwo.score === 101) {
+      setIsRoundOver(true);
+      
+      playerOne.score === 101 && setPlayerOne(prev => ({...prev, score: 0}))
+      playerTwo.score === 101 && setPlayerTwo(prev => ({...prev, score: 0}))
+    } else if (playerOne.score > 101 || playerTwo.score > 101) {
+      setMessage("");
       setIsRoundOver(true);
 
       if (playerOne.score > 101) {
@@ -75,8 +90,21 @@ export function Game101() {
         setWinner({...playerOne, method: 'game'});
         setLoser(playerTwo);
       }
-    } else if (!playerOne.cards.length || !playerTwo.cards.length) {
+    }
+  }, [playerOne.score, playerTwo.score])
+
+  useEffect(() => {
+    setIsRoundOver(false);
+
+    if (!playerOne.cards.length || !playerTwo.cards.length) {
       setIsRoundOver(true);
+
+      const loser = !playerOne.cards.length ? [...playerTwo.cards] : [...playerOne.cards]; 
+      const lossPoints = loser.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0);
+
+      !playerOne.cards.length
+        ? setPlayerTwo(prev => ({...prev, score: prev.score + lossPoints}))
+        : setPlayerOne(prev => ({...prev, score: prev.score + lossPoints}))
 
       if (!playerOne.cards.length) {
         setWinner({...playerOne, method: 'round'});
@@ -89,13 +117,10 @@ export function Game101() {
   }, [playerOne.cards.length, playerTwo.cards.length])
 
   useEffect(() => {
-    const lossPoints = loser?.cards?.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0) || 0;
-
-    !playerOne.cards.length
-      ? setPlayerTwo(prev => ({...prev, score: prev.score + lossPoints}))
-      : setPlayerOne(prev => ({...prev, score: prev.score + lossPoints}))
-
     if (winner.method === 'round') {
+      const loser = !playerOne.cards.length ? [...playerTwo.cards] : [...playerOne.cards]; 
+      const lossPoints = loser.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0);
+
       setMessage(
         <>
           <GameMessage style={{ position: 'static', transform: 'none' }}>
@@ -106,7 +131,6 @@ export function Game101() {
           <GameButton
             onClick={() => {
               setIsRoundOver(false);
-              setIsPlayerOneTurn(true);
               setDisabled(false);
               setIsGetCard(false);
               setIsEndTurn(false);
@@ -119,8 +143,8 @@ export function Game101() {
               setWinner({});
               setLoser({});
 
-              getCard(setPlayerOne, defaultDeck, 4);
-              getCard(setPlayerTwo, defaultDeck, 5);
+              getCard(setPlayerOne, defaultDeck, 5);
+              getCard(setPlayerTwo, defaultDeck, 4);
               getCard(setGameBoard, defaultDeck, 1);
 
               setDeck([...defaultDeck]);
@@ -146,7 +170,6 @@ export function Game101() {
           <GameButton
             onClick={() => {
               setIsRoundOver(false);
-              setIsPlayerOneTurn(true);
               setDisabled(false);
               setIsGetCard(false);
               setIsEndTurn(false);
@@ -159,8 +182,8 @@ export function Game101() {
               setWinner({});
               setLoser({});
 
-              getCard(setPlayerOne, defaultDeck, 4);
-              getCard(setPlayerTwo, defaultDeck, 5);
+              getCard(setPlayerOne, defaultDeck, 5);
+              getCard(setPlayerTwo, defaultDeck, 4);
               getCard(setGameBoard, defaultDeck, 1);
 
               setDeck([...defaultDeck]);
@@ -172,7 +195,7 @@ export function Game101() {
         </>
       )
     }
-  }, [isRoundOver]);
+  }, [winner]);
 
   function move(source, destination, droppableSource, droppableDestination) {
     if (isEndTurn) return;
@@ -328,7 +351,6 @@ export function Game101() {
             setPlayerOne(playerTwo);
             setPlayerTwo(temp);
 
-            setIsPlayerOneTurn(!isPlayerOneTurn);
             setIsGetCard(false);
             setIsEndTurn(false);
           }}
