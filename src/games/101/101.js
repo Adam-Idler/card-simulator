@@ -1,15 +1,14 @@
 import styled from "styled-components";
 import { PlaySide } from "../../components/PlaySide";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClassicCard } from "../../cardsTypes/classicCard/ClassicCard";
 import { classicDeckData } from "../../cardsTypes/classicCard/classicDeckData";
 import { Container } from "../../components/Container";
 import { GameWrapper } from "../../components/GameWrapper";
 import { GameButton, GameMessage, GameText, GameModal } from "../../components/gameUI";
 import { Deck } from "../../components/Deck";
-import { getCard } from "../../common/getCard";
-import { shuffle } from "../../common/shuffle";
+import { shuffle, getCard, useEventListener } from "../../common";
 import { declOfNum, randomInteger } from "../../helpers";
 
 const reorder = (list, startIndex, endIndex) => {
@@ -35,6 +34,8 @@ export function Game101() {
   const [isGetCard, setIsGetCard] = useState(false);
   const [isEndTurn, setIsEndTurn] = useState(false);
   const [isRoundOver, setIsRoundOver] = useState(false);
+  const [isBegin, setIsBegin] = useState(false);
+  const [isQuin, setIsQuin] = useState(false);
   
   const [gameBoard, setGameBoard] = useState({count: 0, cards: []});
   const [playerOne, setPlayerOne] = useState({name: 'Игрок 1', score: 0, cards: []});
@@ -44,12 +45,14 @@ export function Game101() {
 
   const [message, setMessage] = useState("");
 
+  const getBtnRef = useRef(null);
+  const endTurnRef = useRef(null);
+
   useEffect(() => {
     shuffle(deck);
     getCard(setPlayerOne, deck, 5);
     getCard(setPlayerTwo, deck, 4);
     getCard(setGameBoard, deck, 1);
-
   }, []);
 
   useEffect(() => {
@@ -61,7 +64,16 @@ export function Game101() {
 
     setDisabled(!result);
     if (isGetCard && result) setIsEndTurn(true);
-    if (gameBoard.cards && gameBoard.cards.length !== 1 && gameBoard.cards[0]?.name === '9' && result) {setIsEndTurn(false);setDisabled(false); setIsGetCard(false)} 
+    if (
+      gameBoard.cards && 
+      gameBoard.cards.length !== 1 && 
+      gameBoard.cards[0]?.name === '9' && 
+      result
+    ) {
+      setIsEndTurn(false);
+      setDisabled(false); 
+      setIsGetCard(false)
+    } 
   }, [playerOne.cards]);
 
   useEffect(() => {
@@ -91,30 +103,35 @@ export function Game101() {
         setLoser(playerTwo);
       }
     }
-  }, [playerOne.score, playerTwo.score])
+  }, [playerOne.score, playerTwo.score]);
 
   useEffect(() => {
     setIsRoundOver(false);
 
-    if (!playerOne.cards.length || !playerTwo.cards.length) {
+    if (!playerOne.cards.length && !isBegin) {
       setIsRoundOver(true);
 
-      const loser = !playerOne.cards.length ? [...playerTwo.cards] : [...playerOne.cards]; 
+      let score = 0;
+      const lastCard = gameBoard.cards[0] ?? [];
+
+      if (lastCard?.name === 'Q') {
+        if (lastCard?.suit === 'spades') {
+          score = 40;
+        } else {
+          score = 20;
+        }
+      }
+
+      const loser = [...playerTwo.cards];
       const lossPoints = loser.reduce((accumulator, { value }) => value !== 9 ? accumulator + value : accumulator + 0, 0);
 
-      !playerOne.cards.length
-        ? setPlayerTwo(prev => ({...prev, score: prev.score + lossPoints}))
-        : setPlayerOne(prev => ({...prev, score: prev.score + lossPoints}))
+      setPlayerOne(prev => ({...prev, score: prev.score - score}));
+      setPlayerTwo(prev => ({...prev, score: prev.score + lossPoints}));
 
-      if (!playerOne.cards.length) {
-        setWinner({...playerOne, method: 'round'});
-        setLoser(playerTwo);
-      } else {
-        setWinner({...playerTwo, method: 'round'});
-        setLoser(playerOne);
-      }
+      setWinner({...playerOne, method: 'round'});
+      setLoser(playerTwo);
     }
-  }, [playerOne.cards.length, playerTwo.cards.length])
+  }, [playerOne.cards.length]);
 
   useEffect(() => {
     if (winner.method === 'round') {
@@ -123,7 +140,7 @@ export function Game101() {
 
       setMessage(
         <>
-          <GameMessage style={{ position: 'static', transform: 'none' }}>
+          <GameMessage>
             <span style={{ color: '#15ac13' }}>{winner.name}</span> победил.
             <br />
             <span style={{ color: '#863232' }}>{loser.name}</span> получает <i>{declOfNum(lossPoints, ['очко', 'очка', 'очков'])}</i>.
@@ -134,6 +151,7 @@ export function Game101() {
               setDisabled(false);
               setIsGetCard(false);
               setIsEndTurn(false);
+              setIsQuin(false);
               shuffle(defaultDeck);
 
               setGameBoard({count: 0, cards: []});
@@ -162,7 +180,7 @@ export function Game101() {
 
       setMessage(
         <>
-          <GameMessage style={{ position: 'static', transform: 'none' }}>
+          <GameMessage>
             <span style={{ color: '#15ac13' }}>{winner.name}</span> выиграл.
             <br />
             <span style={{ color: '#863232' }}>{loser.name}</span> проиграл, набрав {declOfNum(loser.score, ['очко', 'очка', 'очков'])} 
@@ -196,6 +214,54 @@ export function Game101() {
       )
     }
   }, [winner]);
+
+  // useEffect(() => {
+  //   if (!isBegin) return;
+  //   setMessage(
+  //     <>
+  //       <GameMessage style={{marginBottom: '20px'}}>Имя первого игрока</GameMessage>
+  //       <input
+  //         type="text"
+  //         style={{
+  //           width: '400px', 
+  //           height: '50px', 
+  //           backgroundColor: 'transparent',
+  //           border: '3px solid #fff', 
+  //           outline: 'none',
+  //           borderRadius: '8px', 
+  //           fontSize: '24px',
+  //           color: '#fff',
+  //           marginBottom: '20px'
+  //         }}
+  //         onChange={(e) => setPlayerOne(prev => ({...prev, name: e.target.value}))}
+  //       />
+  //       <GameMessage style={{marginBottom: '20px'}}>Имя второго игрока</GameMessage>
+  //       <input 
+  //         type="text"
+  //         style={{
+  //           width: '400px', 
+  //           height: '50px', 
+  //           backgroundColor: 'transparent',
+  //           border: '3px solid #fff', 
+  //           outline: 'none',
+  //           borderRadius: '8px', 
+  //           fontSize: '24px',
+  //           color: '#fff'
+  //         }}
+  //         onChange={(e) => setPlayerTwo(prev => ({...prev, name: e.target.value}))}
+  //       />
+  //       <GameButton 
+  //         style={{marginTop: '20px'}}
+  //         onClick={
+  //           () => {
+  //             setIsBegin(false);
+  //             setMessage("");
+  //           }
+  //         }
+  //       >Начать</GameButton>
+  //     </>
+  //   );
+  // }, []);
 
   function move(source, destination, droppableSource, droppableDestination) {
     if (isEndTurn) return;
@@ -258,6 +324,45 @@ export function Game101() {
         getCard(setPlayerTwo, deck, 4);
       } else if (lastCard.name === 'A' || lastCard.name === '9') {
         setIsEndTurn(false);
+      } else if (lastCard.name === 'Q') {
+        setIsQuin(true);
+        
+        function quinClickHandler(suit) {
+          setIsQuin(false);
+          result.gameBoard[0].suit = suit;
+        }
+
+        setMessage(
+          <>
+            <GameMessage style={{ marginBottom: '20px' }}>Выбери масть</GameMessage>
+            <div style={{width: '100%', display: 'flex', justifyContent: 'space-between'}}>
+              <ClassicCard 
+                cardData={{ suit: 'heart' }} 
+                style={{ padding: '12px' }}
+                className="choose-card"
+                onClick={() => quinClickHandler('heart')}
+              />
+              <ClassicCard 
+                cardData={{ suit: 'tambourine' }} 
+                style={{ padding: '12px' }} 
+                className="choose-card"
+                onClick={() => quinClickHandler('tambourine')}
+              />
+              <ClassicCard 
+                cardData={{ suit: 'cross' }} 
+                style={{ padding: '12px' }} 
+                className="choose-card"
+                onClick={() => quinClickHandler('cross')}
+              />
+              <ClassicCard 
+                cardData={{ suit: 'spades' }} 
+                style={{ padding: '12px' }} 
+                className="choose-card"
+                onClick={() => quinClickHandler('spades')}
+              />
+            </div>
+          </>
+        )
       }
 
       result.gameBoard[0].rotateValue = randomInteger(-5, 5);
@@ -266,6 +371,18 @@ export function Game101() {
       setGameBoard(prev => ({...prev, cards: result.gameBoard}));
     }
   }
+
+  function keyDownHandler({ key }) {
+    if (key === ' ') {
+      if (!isEndTurn) {
+        getBtnRef.current.click();
+      } else {
+        endTurnRef.current.click();
+      }
+    }
+  }
+
+  useEventListener('keydown', keyDownHandler);
 
   return (
     <GameWrapper>
@@ -339,6 +456,7 @@ export function Game101() {
             getCard(setPlayerOne, deck, 1);
             setIsGetCard(true);
           }}
+          ref={getBtnRef}
           disabled={disabled || isEndTurn || isRoundOver}
           style={{ marginBottom: "10px" }}
         >
@@ -354,6 +472,7 @@ export function Game101() {
             setIsGetCard(false);
             setIsEndTurn(false);
           }}
+          ref={endTurnRef}
           disabled={!isEndTurn || isRoundOver}
           style={{ transition: 'box-shadow .2s', boxShadow: `${isEndTurn ? '0px 0px 10px 5px #15ac13' : ''}` }}
         >
@@ -363,7 +482,12 @@ export function Game101() {
         <GameText>{playerOne.name}: {playerOne.score}</GameText>
       </PlaySide>
 
-      <GameModal style={{ display: `${isRoundOver ? 'flex' : 'none'}` }}>
+      <GameModal 
+        style={{ 
+          display: `${isRoundOver || isBegin || isQuin ? 'flex' : 'none'}`,
+          background: `${isBegin ? 'rgba(0, 0, 0, 1)' : 'rgba(0, 0, 0, .8)'}` 
+        }}
+      >
         {message}
       </GameModal>
     </GameWrapper>

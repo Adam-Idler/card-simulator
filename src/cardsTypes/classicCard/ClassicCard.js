@@ -8,10 +8,10 @@ import spades from './suits/spades.png';
 import cardShirt from './cardShirt.png';
 
 const Suit = styled.div`
-  background: url(${props => props.image}) center no-repeat;
+  background: url(${({ image }) => image}) center no-repeat;
   background-size: cover;
-  ${props => {
-    switch (props.image) {
+  ${({ image }) => {
+    switch (image) {
       case heart:
         return 'width: 74px; height: 71px;';
         break;
@@ -32,8 +32,8 @@ const Suit = styled.div`
 
 const SuitMini = styled(Suit)`
   margin: 0;
-  ${props => {
-    switch (props.image) {
+  ${({ image }) => {
+    switch (image) {
       case heart:
         return 'max-width: 21.5px; max-height: 19.4px';
         break;
@@ -53,20 +53,14 @@ const SuitMini = styled(Suit)`
 const CardValue = styled.span`
   font-size: 32px;
   font-weight: bold;
-  position: absolute;
   max-width: 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  top: 0px;
-  left: 10px;
-  color: ${props => props.color};
+  color: ${({ color }) => color};
 
   &.reverse {
     transform: rotate(-180deg);
-    bottom: 0px;
-    right: 10px;
-    left: auto;
   }
 `;
 
@@ -102,14 +96,16 @@ export const ClassicCard = React.forwardRef((props, ref) => {
         ?
           <>
             <CardValue color={color}>
-              {props.cardData.name}
+              <span>{props.cardData.name}</span>
               <SuitMini image={props.cardData.image} />
             </CardValue>
-            <CardValue color={color} className="reverse">
-              {props.cardData.name}
-              <SuitMini image={props.cardData.image} />
-            </CardValue>
+
             <Suit image={props.cardData.image} />
+
+            <CardValue color={color} className="reverse">
+              <span>{props.cardData.name}</span>
+              <SuitMini image={props.cardData.image} />
+            </CardValue>
           </>
         :
           <CardBackside />
